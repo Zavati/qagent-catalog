@@ -99,3 +99,7 @@ Catalog knows what we believe exists in the system.
 ## 07.5.2
 
 The Catalog now consumes versioned `qagent.catalog-update.v1` events from the Normalizer into a durable idempotent inbox. Domain consolidation starts in 07.5.3.
+
+## Foundation 07.5.3
+
+Service Identity & Host Mapping processes Catalog inbox facts into `catalog_services` and environment-aware `catalog_service_hosts`. Identity v1 is conservative (`host:<hostname>`); different hostnames are not automatically merged without evidence. A Queue post-batch sweep plus a five-minute Cron Trigger recovers older PENDING events.

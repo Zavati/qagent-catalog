@@ -7,8 +7,8 @@ function env(): Env {
     CATALOG_DB: {} as D1Database,
     ENVIRONMENT: "development",
     SERVICE_NAME: "qagent-catalog",
-    FOUNDATION: "07.5.2",
-    REVISION: "ingestion-contract-v1",
+    FOUNDATION: "07.5.3",
+    REVISION: "service-identity-v1",
   } as Env;
 }
 
@@ -17,8 +17,8 @@ describe("Foundation 07.5.1 health", () => {
     expect(catalogHealth(env())).toEqual({
       status: "ok",
       service: "qagent-catalog",
-      foundation: "07.5.2",
-      revision: "foundation",
+      foundation: "07.5.3",
+      revision: "service-identity-v1",
       role: "knowledge-layer",
       environment: "development",
     });
@@ -34,7 +34,7 @@ describe("Foundation 07.5.1 health", () => {
     expect(await response.json()).toMatchObject({
       status: "ok",
       service: "qagent-catalog",
-      foundation: "07.5.2",
+      foundation: "07.5.3",
       role: "knowledge-layer",
     });
   });
