@@ -34,7 +34,7 @@ npx wrangler d1 create qagent-catalog-dev
 
 Copy the returned database ID into `wrangler.toml`.
 
-Then apply migrations:
+Then apply migrations: ese
 
 ```bash
 npx wrangler d1 migrations apply qagent-catalog-dev --remote
