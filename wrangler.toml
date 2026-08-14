@@ -13,5 +13,5 @@ REVISION = "foundation"
 binding = "CATALOG_DB"
 database_name = "qagent-catalog-dev"
 # Replace after: npx wrangler d1 create qagent-catalog-dev
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "6db780dd-00cb-40e8-83b1-f493d3e07fbc"
 migrations_dir = "migrations"
