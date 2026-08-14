@@ -94,3 +94,8 @@ Observation knows what happened.
 Normalizer knows what the fact means structurally.
 Catalog knows what we believe exists in the system.
 ```
+
+
+## 07.5.2
+
+The Catalog now consumes versioned `qagent.catalog-update.v1` events from the Normalizer into a durable idempotent inbox. Domain consolidation starts in 07.5.3.
