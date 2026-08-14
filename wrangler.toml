@@ -1,0 +1,17 @@
+name = "qagent-catalog"
+main = "src/index.ts"
+compatibility_date = "2026-08-14"
+workers_dev = true
+
+[vars]
+ENVIRONMENT = "development"
+SERVICE_NAME = "qagent-catalog"
+FOUNDATION = "07.5.1"
+REVISION = "foundation"
+
+[[d1_databases]]
+binding = "CATALOG_DB"
+database_name = "qagent-catalog-dev"
+# Replace after: npx wrangler d1 create qagent-catalog-dev
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"

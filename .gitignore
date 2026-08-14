@@ -1,0 +1,12 @@
+node_modules/
+.wrangler/
+dist/
+coverage/
+.dev.vars
+.env
+.env.*
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
