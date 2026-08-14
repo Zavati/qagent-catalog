@@ -15,3 +15,15 @@ database_name = "qagent-catalog-dev"
 # Replace after: npx wrangler d1 create qagent-catalog-dev
 database_id = "6db780dd-00cb-40e8-83b1-f493d3e07fbc"
 migrations_dir = "migrations"
+
+
+[[queues.consumers]]
+queue = "qagent-catalog-updates-dev"
+max_batch_size = 10
+max_batch_timeout = 5
+max_retries = 5
+max_concurrency = 1
+dead_letter_queue = "qagent-catalog-updates-dlq-dev"
+
+[triggers]
+crons = [ "*/5 * * * *" ]
