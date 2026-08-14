@@ -6,8 +6,8 @@ workers_dev = true
 [vars]
 ENVIRONMENT = "development"
 SERVICE_NAME = "qagent-catalog"
-FOUNDATION = "07.5.1"
-REVISION = "foundation"
+FOUNDATION = "07.5.3"
+REVISION = "service-identity-v1"
 
 [[d1_databases]]
 binding = "CATALOG_DB"
