@@ -1,6 +1,6 @@
 {
   "name": "qagent-catalog",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "QAgent Knowledge Layer - persistent API Catalog foundation.",
   "type": "module",
   "scripts": {

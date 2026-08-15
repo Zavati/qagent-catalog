@@ -34,6 +34,9 @@ import {
   processOperationalSignalEvent,
   processPendingOperationalSignalsBatch,
 } from "./storage/operationalSignalsRepository";
+import {
+  processPendingDiscoveryConfidenceBatch,
+} from "./storage/discoveryConfidenceRepository";
 
 function json(value: unknown, status = 200): Response {
   return new Response(JSON.stringify(value), {
@@ -126,7 +129,7 @@ export default {
   },
 
   async queue(batch, env): Promise<void> {
-    console.log(`[QAgent Catalog] revision=operational-signals-v1 messages=${batch.messages.length}`);
+    console.log(`[QAgent Catalog] revision=discovery-confidence-v1 messages=${batch.messages.length}`);
     for (const message of batch.messages) {
       try {
         const result = await processCatalogUpdate(env.CATALOG_DB, message.body);
@@ -148,6 +151,7 @@ export default {
     const operationalSweep = await processPendingOperationalSignalsBatch(env.CATALOG_DB, 250);
     const classificationSignalSweep = await processPendingClassificationSignalBatch(env.CATALOG_DB, 250);
     const classificationSweep = await processPendingServiceClassificationBatch(env.CATALOG_DB, 100);
+    const confidenceSweep = await processPendingDiscoveryConfidenceBatch(env.CATALOG_DB, 150);
     if (
       serviceSweep.processed || serviceSweep.failed
       || endpointSweep.processed || endpointSweep.failed
@@ -156,9 +160,10 @@ export default {
       || operationalSweep.processed || operationalSweep.failed
       || classificationSignalSweep.processed || classificationSignalSweep.failed
       || classificationSweep.processed || classificationSweep.failed
+      || confidenceSweep.processed || confidenceSweep.failed
     ) {
       console.log(
-        `[QAgent Catalog] pending sweep services=${serviceSweep.processed}/${serviceSweep.failed} endpoints=${endpointSweep.processed}/${endpointSweep.failed} schemas=${schemaSweep.processed}/${schemaSweep.failed} evidence=${evidenceSweep.processed}/${evidenceSweep.failed} operational=${operationalSweep.processed}/${operationalSweep.failed} classificationSignals=${classificationSignalSweep.processed}/${classificationSignalSweep.failed} classifications=${classificationSweep.processed}/${classificationSweep.failed}`,
+        `[QAgent Catalog] pending sweep services=${serviceSweep.processed}/${serviceSweep.failed} endpoints=${endpointSweep.processed}/${endpointSweep.failed} schemas=${schemaSweep.processed}/${schemaSweep.failed} evidence=${evidenceSweep.processed}/${evidenceSweep.failed} operational=${operationalSweep.processed}/${operationalSweep.failed} classificationSignals=${classificationSignalSweep.processed}/${classificationSignalSweep.failed} classifications=${classificationSweep.processed}/${classificationSweep.failed} confidence=${confidenceSweep.processed}/${confidenceSweep.failed}`,
       );
     }
   },
@@ -172,8 +177,9 @@ export default {
       const operationalSweep = await processPendingOperationalSignalsBatch(env.CATALOG_DB, 250);
       const classificationSignalSweep = await processPendingClassificationSignalBatch(env.CATALOG_DB, 250);
       const classificationSweep = await processPendingServiceClassificationBatch(env.CATALOG_DB, 100);
+      const confidenceSweep = await processPendingDiscoveryConfidenceBatch(env.CATALOG_DB, 150);
       console.log(
-        `[QAgent Catalog] scheduled knowledge sweep services=${serviceSweep.processed}/${serviceSweep.failed} endpoints=${endpointSweep.processed}/${endpointSweep.failed} schemas=${schemaSweep.processed}/${schemaSweep.failed} evidence=${evidenceSweep.processed}/${evidenceSweep.failed} operational=${operationalSweep.processed}/${operationalSweep.failed} classificationSignals=${classificationSignalSweep.processed}/${classificationSignalSweep.failed} classifications=${classificationSweep.processed}/${classificationSweep.failed}`,
+        `[QAgent Catalog] scheduled knowledge sweep services=${serviceSweep.processed}/${serviceSweep.failed} endpoints=${endpointSweep.processed}/${endpointSweep.failed} schemas=${schemaSweep.processed}/${schemaSweep.failed} evidence=${evidenceSweep.processed}/${evidenceSweep.failed} operational=${operationalSweep.processed}/${operationalSweep.failed} classificationSignals=${classificationSignalSweep.processed}/${classificationSignalSweep.failed} classifications=${classificationSweep.processed}/${classificationSweep.failed} confidence=${confidenceSweep.processed}/${confidenceSweep.failed}`,
       );
     })());
   },

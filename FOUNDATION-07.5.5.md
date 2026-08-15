@@ -28,7 +28,7 @@ AI_SUGGESTED     (reserved for a future AI-assisted flow)
 ## Important distinction
 
 `classification_confidence` means confidence that the selected **category** is correct.
-It is deliberately separate from Foundation 07.5.8 Discovery Confidence, which will measure confidence in discovered operational knowledge.
+It is deliberately separate from Foundation 07.5.9 Discovery Confidence, which will measure confidence in discovered operational knowledge.
 
 ## Processing pipeline
 

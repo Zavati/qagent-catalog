@@ -4,7 +4,7 @@ QAgent **Knowledge Layer**.
 
 Foundation 07.5 converts safe, deterministic facts produced by the Processing Plane into durable API knowledge.
 
-## Current scope — 07.5.8
+## Current scope — 07.5.9
 
 The Catalog currently provides:
 
@@ -26,6 +26,9 @@ The Catalog currently provides:
 - exact distinct session/environment presence;
 - per-environment endpoint operational aggregates;
 - derived success/error rates and latency averages;
+- deterministic/explainable endpoint Discovery Confidence (`discovery-confidence-v1`);
+- confidence levels/reasons built from classification, frequency, sessions, environments, schemas and HTTP evidence;
+- stale-input recomputation without scanning the Evidence Ledger;
 - Queue consumer;
 - five-minute bounded recovery sweep;
 - health endpoint.
@@ -58,8 +61,8 @@ Expected payload for this snapshot:
 {
   "status": "ok",
   "service": "qagent-catalog",
-  "foundation": "07.5.8",
-  "revision": "operational-signals-v1",
+  "foundation": "07.5.9",
+  "revision": "discovery-confidence-v1",
   "role": "knowledge-layer",
   "environment": "development"
 }
@@ -89,6 +92,8 @@ Frequency & Operational Signals
 Classification Signal Aggregation
   ↓
 Explainable Service Classification
+  ↓
+Discovery Confidence
 ```
 
 ## Evidence model
@@ -134,4 +139,16 @@ Catalog knows what we believe exists in the system.
 Evidence explains why we believe it.
 ```
 
-Discovery Confidence, lifecycle, Query API, Console integration, QA Curation, AI Test Design and Runner remain outside 07.5.8.
+Lifecycle, Query API, Console integration, QA Curation, AI Test Design and Runner remain outside 07.5.9.
+
+## Discovery Confidence
+
+Foundation 07.5.9 calculates endpoint-level confidence from durable aggregate knowledge rather than raw observation scans.
+
+Read model:
+
+```text
+catalog_endpoint_discovery_confidence_v1
+```
+
+The score is deterministic and stores its positive/negative reason contributions and the input signal snapshot. Service `classification_confidence` and endpoint `discovery_confidence_score` are intentionally different concepts.

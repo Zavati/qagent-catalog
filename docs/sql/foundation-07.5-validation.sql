@@ -225,3 +225,89 @@ SELECT
   last_seen_at
 FROM catalog_endpoint_environment_operational_summary_v1
 ORDER BY method, normalized_path, environment_id;
+
+-- ============================================================================
+-- Foundation 07.5.9 — Discovery Confidence
+-- ============================================================================
+
+-- Processing status.
+SELECT
+    discovery_confidence_status,
+    COUNT(*) AS endpoints
+FROM catalog_endpoints
+GROUP BY discovery_confidence_status;
+
+-- Level distribution.
+SELECT
+    discovery_confidence_level,
+    COUNT(*) AS endpoints,
+    ROUND(AVG(discovery_confidence_score), 2) AS avg_score,
+    MIN(discovery_confidence_score) AS min_score,
+    MAX(discovery_confidence_score) AS max_score
+FROM catalog_endpoints
+WHERE discovery_confidence_status = 'PROCESSED'
+GROUP BY discovery_confidence_level
+ORDER BY avg_score DESC;
+
+-- Explainable ranked endpoint knowledge.
+SELECT
+    service_name,
+    classification,
+    classification_confidence,
+    method,
+    normalized_path,
+    observation_count,
+    session_count,
+    environment_count,
+    schema_track_count,
+    stable_schema_track_count,
+    discovery_confidence_score,
+    discovery_confidence_level,
+    discovery_confidence_reasons_json,
+    discovery_confidence_signals_json,
+    discovery_confidence_calculated_at
+FROM catalog_endpoint_discovery_confidence_v1
+WHERE discovery_confidence_status = 'PROCESSED'
+ORDER BY discovery_confidence_score DESC, observation_count DESC, last_seen_at DESC
+LIMIT 100;
+
+-- Functional discovery candidates.
+SELECT
+    service_name,
+    classification,
+    method,
+    normalized_path,
+    observation_count,
+    session_count,
+    schema_track_count,
+    discovery_confidence_score,
+    discovery_confidence_level
+FROM catalog_endpoint_discovery_confidence_v1
+WHERE discovery_confidence_status = 'PROCESSED'
+  AND classification IN ('FIRST_PARTY_API', 'INTEGRATION', 'UNKNOWN')
+ORDER BY discovery_confidence_score DESC, observation_count DESC
+LIMIT 100;
+
+-- Noise-control validation.
+SELECT
+    classification,
+    discovery_confidence_level,
+    COUNT(*) AS endpoints,
+    ROUND(AVG(discovery_confidence_score), 2) AS avg_score
+FROM catalog_endpoint_discovery_confidence_v1
+WHERE discovery_confidence_status = 'PROCESSED'
+  AND classification IN ('ANALYTICS', 'OBSERVABILITY', 'STATIC_ASSET')
+GROUP BY classification, discovery_confidence_level
+ORDER BY classification, avg_score DESC;
+
+-- Failures should remain empty.
+SELECT
+    endpoint_id,
+    method,
+    normalized_path,
+    discovery_confidence_attempts,
+    discovery_confidence_last_attempt_at,
+    discovery_confidence_error
+FROM catalog_endpoints
+WHERE discovery_confidence_status = 'FAILED'
+ORDER BY discovery_confidence_last_attempt_at DESC;
