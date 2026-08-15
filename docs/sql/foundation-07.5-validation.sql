@@ -171,3 +171,57 @@ SELECT
 FROM catalog_schema_evidence_v1
 ORDER BY observed_at DESC
 LIMIT 100;
+
+-- ================================================================
+-- 07.5.8 — Frequency & Operational Signals
+-- ================================================================
+SELECT operational_signal_status, COUNT(*) AS total
+FROM catalog_ingestion_events
+GROUP BY operational_signal_status;
+
+SELECT
+  (SELECT COUNT(*)
+     FROM catalog_ingestion_events
+    WHERE evidence_status = 'PROCESSED'
+      AND operational_signal_status = 'PROCESSED') AS processed_evidence,
+  (SELECT COALESCE(SUM(observation_count), 0)
+     FROM catalog_endpoint_operational_signals) AS aggregated_observations;
+
+SELECT
+  service_name,
+  classification,
+  method,
+  normalized_path,
+  observation_count,
+  session_count,
+  environment_count,
+  success_count,
+  client_error_count,
+  server_error_count,
+  network_failure_count,
+  success_rate_pct,
+  latency_avg_ms,
+  latency_min_ms,
+  latency_max_ms,
+  observations_per_session,
+  first_seen_at,
+  last_seen_at
+FROM catalog_endpoint_operational_summary_v1
+ORDER BY observation_count DESC, last_seen_at DESC
+LIMIT 100;
+
+SELECT
+  service_name,
+  method,
+  normalized_path,
+  environment_id,
+  observation_count,
+  session_count,
+  success_rate_pct,
+  latency_avg_ms,
+  latency_min_ms,
+  latency_max_ms,
+  first_seen_at,
+  last_seen_at
+FROM catalog_endpoint_environment_operational_summary_v1
+ORDER BY method, normalized_path, environment_id;

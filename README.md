@@ -4,7 +4,7 @@ QAgent **Knowledge Layer**.
 
 Foundation 07.5 converts safe, deterministic facts produced by the Processing Plane into durable API knowledge.
 
-## Current scope — 07.5.7
+## Current scope — 07.5.8
 
 The Catalog currently provides:
 
@@ -22,6 +22,10 @@ The Catalog currently provides:
 - durable Evidence Ledger (`evidence-v1`);
 - deterministic evidence identity/fingerprint without raw payload duplication;
 - endpoint/service/schema provenance views;
+- incremental endpoint Frequency & Operational Signals (`operational-signals-v1`);
+- exact distinct session/environment presence;
+- per-environment endpoint operational aggregates;
+- derived success/error rates and latency averages;
 - Queue consumer;
 - five-minute bounded recovery sweep;
 - health endpoint.
@@ -54,8 +58,8 @@ Expected payload for this snapshot:
 {
   "status": "ok",
   "service": "qagent-catalog",
-  "foundation": "07.5.7",
-  "revision": "evidence-model-v1",
+  "foundation": "07.5.8",
+  "revision": "operational-signals-v1",
   "role": "knowledge-layer",
   "environment": "development"
 }
@@ -80,6 +84,8 @@ Schema Consolidation & Versioning
   ↓
 Evidence Materialization
   ↓
+Frequency & Operational Signals
+  ↓
 Classification Signal Aggregation
   ↓
 Explainable Service Classification
@@ -97,6 +103,17 @@ catalog_schema_evidence_v1
 ```
 
 Evidence stores no raw body. The fingerprint covers immutable safe facts and excludes mutable Service/Endpoint links so future curation does not rewrite historical evidence identity.
+
+## Operational signals
+
+The Evidence Ledger feeds incremental, idempotent endpoint aggregates. Read models:
+
+```text
+catalog_endpoint_operational_summary_v1
+catalog_endpoint_environment_operational_summary_v1
+```
+
+The current v1 stores exact counts and latency sum/min/max; average is derived. Percentiles remain a future evolution rather than being approximated silently.
 
 ## SQL references
 
@@ -117,4 +134,4 @@ Catalog knows what we believe exists in the system.
 Evidence explains why we believe it.
 ```
 
-Frequency & Operational Signals, Discovery Confidence, lifecycle, Query API, Console integration, QA Curation, AI Test Design and Runner remain outside 07.5.7.
+Discovery Confidence, lifecycle, Query API, Console integration, QA Curation, AI Test Design and Runner remain outside 07.5.8.
