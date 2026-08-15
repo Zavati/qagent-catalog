@@ -14,6 +14,8 @@ import {
   processLogicalEndpointIdentity,
   processPendingEndpointIdentityBatch,
 } from "./storage/endpointIdentityRepository";
+import { processPendingServiceClassificationBatch } from "./storage/classificationRepository";
+import { processPendingClassificationSignalBatch } from "./storage/classificationSignalRepository";
 
 function json(value: unknown, status = 200): Response {
   return new Response(JSON.stringify(value), {
@@ -76,7 +78,7 @@ export default {
   },
 
   async queue(batch, env): Promise<void> {
-    console.log(`[QAgent Catalog] revision=logical-endpoint-identity-v1 messages=${batch.messages.length}`);
+    console.log(`[QAgent Catalog] revision=classification-engine-v1 messages=${batch.messages.length}`);
     for (const message of batch.messages) {
       try {
         const result = await processCatalogUpdate(env.CATALOG_DB, message.body);
@@ -90,13 +92,19 @@ export default {
       }
     }
 
-    // A bounded sweep also upgrades events that were already PENDING before
-    // Foundation 07.5.3 was deployed.
+    // Bounded recovery sweeps upgrade legacy/backlogged stages without unbounded work.
     const serviceSweep = await processPendingServiceIdentityBatch(env.CATALOG_DB, 100);
     const endpointSweep = await processPendingEndpointIdentityBatch(env.CATALOG_DB, 100);
-    if (serviceSweep.processed || serviceSweep.failed || endpointSweep.processed || endpointSweep.failed) {
+    const classificationSignalSweep = await processPendingClassificationSignalBatch(env.CATALOG_DB, 250);
+    const classificationSweep = await processPendingServiceClassificationBatch(env.CATALOG_DB, 100);
+    if (
+      serviceSweep.processed || serviceSweep.failed
+      || endpointSweep.processed || endpointSweep.failed
+      || classificationSignalSweep.processed || classificationSignalSweep.failed
+      || classificationSweep.processed || classificationSweep.failed
+    ) {
       console.log(
-        `[QAgent Catalog] pending sweep services=${serviceSweep.processed}/${serviceSweep.failed} endpoints=${endpointSweep.processed}/${endpointSweep.failed}`,
+        `[QAgent Catalog] pending sweep services=${serviceSweep.processed}/${serviceSweep.failed} endpoints=${endpointSweep.processed}/${endpointSweep.failed} classificationSignals=${classificationSignalSweep.processed}/${classificationSignalSweep.failed} classifications=${classificationSweep.processed}/${classificationSweep.failed}`,
       );
     }
   },
@@ -105,8 +113,10 @@ export default {
     ctx.waitUntil((async () => {
       const serviceSweep = await processPendingServiceIdentityBatch(env.CATALOG_DB, 100);
       const endpointSweep = await processPendingEndpointIdentityBatch(env.CATALOG_DB, 100);
+      const classificationSignalSweep = await processPendingClassificationSignalBatch(env.CATALOG_DB, 250);
+      const classificationSweep = await processPendingServiceClassificationBatch(env.CATALOG_DB, 100);
       console.log(
-        `[QAgent Catalog] scheduled knowledge sweep services=${serviceSweep.processed}/${serviceSweep.failed} endpoints=${endpointSweep.processed}/${endpointSweep.failed}`,
+        `[QAgent Catalog] scheduled knowledge sweep services=${serviceSweep.processed}/${serviceSweep.failed} endpoints=${endpointSweep.processed}/${endpointSweep.failed} classificationSignals=${classificationSignalSweep.processed}/${classificationSignalSweep.failed} classifications=${classificationSweep.processed}/${classificationSweep.failed}`,
       );
     })());
   },

@@ -4,7 +4,7 @@ QAgent **Knowledge Layer**.
 
 Foundation 07.5 converts safe, deterministic facts produced by the Processing Plane into durable API knowledge.
 
-## Current scope — 07.5.4
+## Current scope — 07.5.5
 
 The Catalog currently provides:
 
@@ -14,21 +14,25 @@ The Catalog currently provides:
 - environment-aware Service Host Mapping;
 - stable logical Endpoint Identity (`logical-endpoint-v1`);
 - physical endpoint bindings separated from logical endpoint identity;
+- explainable Service Classification (`classification-v1`);
+- incremental/idempotent classification signal aggregation;
 - Queue consumer;
 - five-minute recovery sweep;
 - health endpoint.
 
-The logical endpoint identity is:
+Classification categories:
 
 ```text
-organizationId
-+ projectId
-+ serviceId
-+ HTTP method
-+ normalizedPath
+FIRST_PARTY_API
+INTEGRATION
+THIRD_PARTY
+ANALYTICS
+OBSERVABILITY
+STATIC_ASSET
+UNKNOWN
 ```
 
-It deliberately excludes Environment, scheme, host, Observation Session, batch and the Normalizer endpoint id.
+Automatic decisions record category confidence, source, reason codes and the aggregate signals used to reach the decision. `classification_confidence` is not Discovery Confidence.
 
 ## Local bootstrap
 
@@ -47,15 +51,8 @@ Preserve only the real `database_id` when replacing snapshots; do not preserve a
 
 ## Health
 
-Workers.dev:
-
 ```http
 GET /health
-```
-
-Public route:
-
-```http
 GET /v1/catalog/health
 ```
 
@@ -65,8 +62,8 @@ Expected payload for this snapshot:
 {
   "status": "ok",
   "service": "qagent-catalog",
-  "foundation": "07.5.4",
-  "revision": "logical-endpoint-identity-v1",
+  "foundation": "07.5.5",
+  "revision": "classification-engine-v1",
   "role": "knowledge-layer",
   "environment": "development"
 }
@@ -90,6 +87,10 @@ Service Host Mapping
 Stable Logical Endpoint Identity
   ↓
 Endpoint Physical Binding
+  ↓
+Classification Signal Aggregation
+  ↓
+Explainable Service Classification
 ```
 
 ## Architectural invariant
@@ -100,4 +101,4 @@ Normalizer knows what the fact means structurally.
 Catalog knows what we believe exists in the system.
 ```
 
-Classification, schema versioning, evidence, frequency/confidence, lifecycle, Query API, AI Test Design and Runner remain outside 07.5.4.
+Schema versioning, Evidence Model, operational frequency signals, Discovery Confidence, lifecycle, Query API, QA Curation, AI Test Design and Runner remain outside 07.5.5.

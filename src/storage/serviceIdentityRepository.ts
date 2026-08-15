@@ -130,6 +130,14 @@ export async function processServiceIdentity(
     ON CONFLICT(organization_id, project_id, service_key) DO UPDATE SET
       first_seen_at = CASE WHEN excluded.first_seen_at < catalog_services.first_seen_at THEN excluded.first_seen_at ELSE catalog_services.first_seen_at END,
       last_seen_at = ${laterTimestamp("catalog_services")},
+      classification_status = CASE
+        WHEN catalog_services.classification_source = 'USER_CONFIRMED' THEN catalog_services.classification_status
+        ELSE 'PENDING'
+      END,
+      classification_error = CASE
+        WHEN catalog_services.classification_source = 'USER_CONFIRMED' THEN catalog_services.classification_error
+        ELSE NULL
+      END,
       updated_at = excluded.updated_at
   `).bind(
     candidateServiceId,
