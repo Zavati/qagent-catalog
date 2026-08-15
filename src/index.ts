@@ -1,5 +1,6 @@
 import { catalogHealth } from "./health";
 import { normalizePublicPathname } from "./http/publicPath";
+import { handleCatalogQueryRoute } from "./http/queryRoutes";
 import { isCatalogUpdateMessage, type CatalogUpdateMessageV1 } from "./contracts/catalogUpdate";
 import { insertCatalogIngestionEvent } from "./storage/catalogIngestionRepository";
 import {
@@ -59,6 +60,9 @@ export async function handleCatalogRequest(request: Request, env: Env): Promise<
 
     return json(catalogHealth(env));
   }
+
+  const queryResponse = await handleCatalogQueryRoute(request, env, pathname);
+  if (queryResponse) return queryResponse;
 
   return json({ status: "not_found", message: "Endpoint inexistente." }, 404);
 }
@@ -129,7 +133,7 @@ export default {
   },
 
   async queue(batch, env): Promise<void> {
-    console.log(`[QAgent Catalog] revision=catalog-lifecycle-v1 messages=${batch.messages.length}`);
+    console.log(`[QAgent Catalog] revision=catalog-query-v1 messages=${batch.messages.length}`);
     for (const message of batch.messages) {
       try {
         const result = await processCatalogUpdate(env.CATALOG_DB, message.body);

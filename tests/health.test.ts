@@ -7,18 +7,18 @@ function env(): Env {
     CATALOG_DB: {} as D1Database,
     ENVIRONMENT: "development",
     SERVICE_NAME: "qagent-catalog",
-    FOUNDATION: "07.5.9",
-    REVISION: "discovery-confidence-v1",
+    FOUNDATION: "07.5.11",
+    REVISION: "catalog-query-v1",
   } as Env;
 }
 
-describe("Foundation 07.5.9 health", () => {
+describe("Foundation 07.5.11 health", () => {
   it("exposes the Knowledge Layer identity", () => {
     expect(catalogHealth(env())).toEqual({
       status: "ok",
       service: "qagent-catalog",
-      foundation: "07.5.9",
-      revision: "discovery-confidence-v1",
+      foundation: "07.5.11",
+      revision: "catalog-query-v1",
       role: "knowledge-layer",
       environment: "development",
     });
@@ -34,8 +34,8 @@ describe("Foundation 07.5.9 health", () => {
     expect(await response.json()).toMatchObject({
       status: "ok",
       service: "qagent-catalog",
-      foundation: "07.5.9",
-      revision: "discovery-confidence-v1",
+      foundation: "07.5.11",
+      revision: "catalog-query-v1",
       role: "knowledge-layer",
     });
   });

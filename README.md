@@ -4,7 +4,7 @@ QAgent **Knowledge Layer**.
 
 Foundation 07.5 converts safe, deterministic facts produced by the Processing Plane into durable API knowledge.
 
-## Current scope — 07.5.10
+## Current scope — 07.5.11
 
 The Catalog currently provides:
 
@@ -36,7 +36,10 @@ The Catalog currently provides:
 - optimistic lifecycle revisions for future QA Curation;
 - protection against automatic overwrite of USER decisions;
 - lifecycle read models that surface new evidence after a manual/system decision;
-- health endpoint.
+- health endpoint;
+- read-only tenant-aware Catalog Query API (`catalog-query-v1`);
+- HMAC-signed Gateway tenant context;
+- opaque keyset pagination and filterable Console read models.
 
 ## Local bootstrap
 
@@ -66,8 +69,8 @@ Expected payload for this snapshot:
 {
   "status": "ok",
   "service": "qagent-catalog",
-  "foundation": "07.5.10",
-  "revision": "catalog-lifecycle-v1",
+  "foundation": "07.5.11",
+  "revision": "catalog-query-v1",
   "role": "knowledge-layer",
   "environment": "development"
 }
@@ -101,6 +104,8 @@ Explainable Service Classification
 Discovery Confidence
   ↓
 Catalog Lifecycle
+  ↓
+Tenant-aware Query API
 ```
 
 ## Evidence model
@@ -135,7 +140,7 @@ Engineering validation/diagnostic SQL is versioned under:
 docs/sql/
 ```
 
-These SQLs are not a Console contract. Foundation 07.5.11 will expose tenant-aware Query APIs for UI consumption.
+These SQLs are not a Console contract. Foundation 07.5.11 exposes tenant-aware Query APIs as the stable UI/service boundary.
 
 ## Architectural invariant
 
@@ -146,7 +151,7 @@ Catalog knows what we believe exists in the system.
 Evidence explains why we believe it.
 ```
 
-Query API, Console integration, QA Curation, AI Test Design and Runner remain outside 07.5.10.
+Console integration, QA Curation, AI Test Design and Runner remain outside 07.5.11.
 
 ## Discovery Confidence
 
@@ -186,3 +191,34 @@ catalog_endpoint_lifecycle_history_v1
 ```
 
 A USER decision is never silently reset by ingestion, confidence recomputation or future SYSTEM processing. New evidence continues to accumulate even for IGNORED/DEPRECATED endpoints and can be surfaced as new evidence since the last lifecycle decision. Public mutation is intentionally deferred to Foundation 07.5.13 QA Curation.
+
+
+## Foundation 07.5.11 — Query API
+
+The Knowledge Layer now exposes a read-only tenant-aware Query API for the future Console.
+
+Public health remains:
+
+```text
+GET /v1/catalog/health
+```
+
+Catalog reads require Gateway-signed tenant context using HMAC-SHA256. Configure the Worker secret with:
+
+```bash
+npx wrangler secret put CATALOG_QUERY_HMAC_SECRET
+```
+
+Canonical read routes:
+
+```text
+GET /v1/catalog/projects/:projectId/summary
+GET /v1/catalog/projects/:projectId/services
+GET /v1/catalog/projects/:projectId/endpoints
+GET /v1/catalog/endpoints/:endpointId
+GET /v1/catalog/endpoints/:endpointId/evidence
+GET /v1/catalog/endpoints/:endpointId/schemas
+GET /v1/catalog/endpoints/:endpointId/lifecycle-history
+```
+
+Use `npm run sign:query -- <url> <organizationId> <projectId>` for pre-Gateway validation. The secret stays server-side and must never be exposed to the Console/browser.

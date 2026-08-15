@@ -6,8 +6,12 @@ workers_dev = true
 [vars]
 ENVIRONMENT = "development"
 SERVICE_NAME = "qagent-catalog"
-FOUNDATION = "07.5.10"
-REVISION = "catalog-lifecycle-v1"
+FOUNDATION = "07.5.11"
+REVISION = "catalog-query-v1"
+CATALOG_QUERY_MAX_SKEW_SECONDS = "300"
+
+[secrets]
+required = [ "CATALOG_QUERY_HMAC_SECRET" ]
 
 [[d1_databases]]
 binding = "CATALOG_DB"

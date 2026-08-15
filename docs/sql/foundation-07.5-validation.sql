@@ -375,3 +375,43 @@ SELECT
 FROM catalog_endpoint_lifecycle_history_v1
 ORDER BY changed_at DESC
 LIMIT 100;
+
+-- ============================================================================
+-- Foundation 07.5.11 — Query API read models
+-- ============================================================================
+
+SELECT meta_key, meta_value, updated_at
+FROM catalog_metadata
+WHERE meta_key IN ('schema_foundation', 'query_api_version')
+ORDER BY meta_key;
+
+SELECT
+  service_id,
+  display_name,
+  classification,
+  endpoint_count,
+  total_observation_count,
+  environment_count,
+  host_binding_count,
+  last_seen_at
+FROM catalog_query_services_v1
+ORDER BY total_observation_count DESC, last_seen_at DESC
+LIMIT 100;
+
+SELECT
+  endpoint_id,
+  service_name,
+  classification,
+  method,
+  normalized_path,
+  observation_count,
+  session_count,
+  environment_count,
+  schema_track_count,
+  discovery_confidence_score,
+  discovery_confidence_level,
+  lifecycle_state,
+  last_seen_at
+FROM catalog_query_endpoints_v1
+ORDER BY discovery_confidence_score DESC, observation_count DESC, last_seen_at DESC
+LIMIT 100;
