@@ -129,7 +129,7 @@ export default {
   },
 
   async queue(batch, env): Promise<void> {
-    console.log(`[QAgent Catalog] revision=discovery-confidence-v1 messages=${batch.messages.length}`);
+    console.log(`[QAgent Catalog] revision=catalog-lifecycle-v1 messages=${batch.messages.length}`);
     for (const message of batch.messages) {
       try {
         const result = await processCatalogUpdate(env.CATALOG_DB, message.body);

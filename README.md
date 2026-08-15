@@ -4,7 +4,7 @@ QAgent **Knowledge Layer**.
 
 Foundation 07.5 converts safe, deterministic facts produced by the Processing Plane into durable API knowledge.
 
-## Current scope — 07.5.9
+## Current scope — 07.5.10
 
 The Catalog currently provides:
 
@@ -31,6 +31,11 @@ The Catalog currently provides:
 - stale-input recomputation without scanning the Evidence Ledger;
 - Queue consumer;
 - five-minute bounded recovery sweep;
+- durable Catalog Lifecycle (`catalog-lifecycle-v1`);
+- append-only endpoint lifecycle history;
+- optimistic lifecycle revisions for future QA Curation;
+- protection against automatic overwrite of USER decisions;
+- lifecycle read models that surface new evidence after a manual/system decision;
 - health endpoint.
 
 ## Local bootstrap
@@ -61,8 +66,8 @@ Expected payload for this snapshot:
 {
   "status": "ok",
   "service": "qagent-catalog",
-  "foundation": "07.5.9",
-  "revision": "discovery-confidence-v1",
+  "foundation": "07.5.10",
+  "revision": "catalog-lifecycle-v1",
   "role": "knowledge-layer",
   "environment": "development"
 }
@@ -94,6 +99,8 @@ Classification Signal Aggregation
 Explainable Service Classification
   ↓
 Discovery Confidence
+  ↓
+Catalog Lifecycle
 ```
 
 ## Evidence model
@@ -139,7 +146,7 @@ Catalog knows what we believe exists in the system.
 Evidence explains why we believe it.
 ```
 
-Lifecycle, Query API, Console integration, QA Curation, AI Test Design and Runner remain outside 07.5.9.
+Query API, Console integration, QA Curation, AI Test Design and Runner remain outside 07.5.10.
 
 ## Discovery Confidence
 
@@ -152,3 +159,30 @@ catalog_endpoint_discovery_confidence_v1
 ```
 
 The score is deterministic and stores its positive/negative reason contributions and the input signal snapshot. Service `classification_confidence` and endpoint `discovery_confidence_score` are intentionally different concepts.
+
+
+## Catalog Lifecycle
+
+Foundation 07.5.10 separates automatic discovery from governance decisions. New endpoints start as `DISCOVERED / AUTO`, while future authenticated curation can move them through:
+
+```text
+DISCOVERED
+CONFIRMED
+IGNORED
+DEPRECATED
+```
+
+Current lifecycle state is stored on `catalog_endpoints` for fast reads, while every transition is append-only in:
+
+```text
+catalog_endpoint_lifecycle_events
+```
+
+Read models:
+
+```text
+catalog_endpoint_lifecycle_v1
+catalog_endpoint_lifecycle_history_v1
+```
+
+A USER decision is never silently reset by ingestion, confidence recomputation or future SYSTEM processing. New evidence continues to accumulate even for IGNORED/DEPRECATED endpoints and can be surfaced as new evidence since the last lifecycle decision. Public mutation is intentionally deferred to Foundation 07.5.13 QA Curation.

@@ -1,7 +1,7 @@
 {
   "name": "qagent-catalog",
-  "version": "0.9.0",
-  "description": "QAgent Knowledge Layer - persistent API Catalog foundation.",
+  "version": "0.10.0",
+  "description": "QAgent Knowledge Layer - API Catalog with lifecycle governance.",
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",

@@ -5,6 +5,10 @@ import {
   LOGICAL_ENDPOINT_IDENTITY_STRATEGY,
   LOGICAL_ENDPOINT_IDENTITY_VERSION,
 } from "../endpointIdentity/identity";
+import {
+  CATALOG_LIFECYCLE_VERSION,
+  catalogLifecycleEventIdFor,
+} from "../lifecycle/catalogLifecycle";
 
 export interface PendingEndpointIdentityEvent {
   eventId: string;
@@ -133,6 +137,14 @@ export async function processLogicalEndpointIdentity(
     endpointId,
     event.serviceHostId,
   );
+  const initialLifecycleEventId = await catalogLifecycleEventIdFor(
+    endpointId,
+    1,
+    "DISCOVERED",
+    "AUTO",
+    null,
+    "INITIAL_DISCOVERY",
+  );
 
   const endpointUpsert = db.prepare(`
     INSERT INTO catalog_endpoints (
@@ -140,8 +152,10 @@ export async function processLogicalEndpointIdentity(
       method, normalized_path, endpoint_key,
       identity_strategy, identity_version,
       first_seen_at, last_seen_at,
-      created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      created_at, updated_at,
+      lifecycle_state, lifecycle_source, lifecycle_version, lifecycle_revision,
+      lifecycle_actor_id, lifecycle_reason, lifecycle_updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(organization_id, project_id, service_id, method, normalized_path) DO UPDATE SET
       first_seen_at = CASE WHEN excluded.first_seen_at < catalog_endpoints.first_seen_at THEN excluded.first_seen_at ELSE catalog_endpoints.first_seen_at END,
       last_seen_at = ${laterTimestamp("catalog_endpoints")},
@@ -160,7 +174,28 @@ export async function processLogicalEndpointIdentity(
     event.observedAt,
     now,
     now,
+    "DISCOVERED",
+    "AUTO",
+    CATALOG_LIFECYCLE_VERSION,
+    1,
+    null,
+    "INITIAL_DISCOVERY",
+    now,
   );
+
+  const lifecycleInitialAudit = db.prepare(`
+    INSERT OR IGNORE INTO catalog_endpoint_lifecycle_events (
+      lifecycle_event_id, endpoint_id, organization_id, project_id, service_id,
+      lifecycle_revision, from_state, to_state, source, actor_id, reason,
+      changed_at, created_at
+    )
+    SELECT
+      ?, endpoint_id, organization_id, project_id, service_id,
+      1, NULL, 'DISCOVERED', 'AUTO', NULL, 'INITIAL_DISCOVERY',
+      COALESCE(lifecycle_updated_at, created_at, ?), ?
+    FROM catalog_endpoints
+    WHERE endpoint_id = ?
+  `).bind(initialLifecycleEventId, now, now, endpointId);
 
   const bindingUpsert = db.prepare(`
     INSERT INTO catalog_endpoint_bindings (
@@ -187,7 +222,7 @@ export async function processLogicalEndpointIdentity(
     now,
   );
 
-  await db.batch([endpointUpsert, bindingUpsert]);
+  await db.batch([endpointUpsert, lifecycleInitialAudit, bindingUpsert]);
 
   await db.prepare(`
     UPDATE catalog_ingestion_events

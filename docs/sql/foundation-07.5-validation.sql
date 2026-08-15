@@ -311,3 +311,67 @@ SELECT
 FROM catalog_endpoints
 WHERE discovery_confidence_status = 'FAILED'
 ORDER BY discovery_confidence_last_attempt_at DESC;
+
+-- ============================================================================
+-- Foundation 07.5.10 — Catalog Lifecycle
+-- ============================================================================
+
+-- Current lifecycle distribution.
+SELECT
+    lifecycle_state,
+    lifecycle_source,
+    COUNT(*) AS endpoints
+FROM catalog_endpoints
+GROUP BY lifecycle_state, lifecycle_source
+ORDER BY lifecycle_state, lifecycle_source;
+
+-- Every endpoint must have lifecycle history.
+SELECT
+    (SELECT COUNT(*) FROM catalog_endpoints) AS endpoints,
+    (SELECT COUNT(DISTINCT endpoint_id) FROM catalog_endpoint_lifecycle_events) AS endpoints_with_history;
+
+-- Current revision must match the latest immutable history revision.
+SELECT
+    e.endpoint_id,
+    e.lifecycle_revision,
+    MAX(h.lifecycle_revision) AS history_revision
+FROM catalog_endpoints e
+LEFT JOIN catalog_endpoint_lifecycle_events h ON h.endpoint_id = e.endpoint_id
+GROUP BY e.endpoint_id, e.lifecycle_revision
+HAVING e.lifecycle_revision <> COALESCE(MAX(h.lifecycle_revision), 0);
+
+-- Product-oriented lifecycle read model.
+SELECT
+    service_name,
+    classification,
+    method,
+    normalized_path,
+    discovery_confidence_score,
+    discovery_confidence_level,
+    lifecycle_state,
+    lifecycle_source,
+    lifecycle_revision,
+    has_user_decision,
+    has_new_evidence_since_lifecycle_change,
+    last_seen_at,
+    lifecycle_updated_at
+FROM catalog_endpoint_lifecycle_v1
+ORDER BY discovery_confidence_score DESC, last_seen_at DESC
+LIMIT 100;
+
+-- Immutable lifecycle history.
+SELECT
+    lifecycle_event_id,
+    service_name,
+    method,
+    normalized_path,
+    lifecycle_revision,
+    from_state,
+    to_state,
+    source,
+    actor_id,
+    reason,
+    changed_at
+FROM catalog_endpoint_lifecycle_history_v1
+ORDER BY changed_at DESC
+LIMIT 100;
