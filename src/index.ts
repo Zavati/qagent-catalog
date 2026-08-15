@@ -22,6 +22,12 @@ import {
   processPendingSchemaConsolidationBatch,
   processSchemaConsolidation,
 } from "./storage/schemaVersioningRepository";
+import {
+  loadPendingEvidenceEvent,
+  markEvidenceFailure,
+  processEvidenceMaterialization,
+  processPendingEvidenceBatch,
+} from "./storage/evidenceRepository";
 
 function json(value: unknown, status = 200): Response {
   return new Response(JSON.stringify(value), {
@@ -85,6 +91,16 @@ export async function processCatalogUpdate(
     }
   }
 
+  const pendingEvidence = await loadPendingEvidenceEvent(db, value.eventId);
+  if (pendingEvidence) {
+    try {
+      await processEvidenceMaterialization(db, pendingEvidence);
+    } catch (error) {
+      await markEvidenceFailure(db, value.eventId, error);
+      throw error;
+    }
+  }
+
   return "accepted";
 }
 
@@ -94,7 +110,7 @@ export default {
   },
 
   async queue(batch, env): Promise<void> {
-    console.log(`[QAgent Catalog] revision=schema-versioning-v1 messages=${batch.messages.length}`);
+    console.log(`[QAgent Catalog] revision=evidence-model-v1 messages=${batch.messages.length}`);
     for (const message of batch.messages) {
       try {
         const result = await processCatalogUpdate(env.CATALOG_DB, message.body);
@@ -112,17 +128,19 @@ export default {
     const serviceSweep = await processPendingServiceIdentityBatch(env.CATALOG_DB, 100);
     const endpointSweep = await processPendingEndpointIdentityBatch(env.CATALOG_DB, 100);
     const schemaSweep = await processPendingSchemaConsolidationBatch(env.CATALOG_DB, 150);
+    const evidenceSweep = await processPendingEvidenceBatch(env.CATALOG_DB, 250);
     const classificationSignalSweep = await processPendingClassificationSignalBatch(env.CATALOG_DB, 250);
     const classificationSweep = await processPendingServiceClassificationBatch(env.CATALOG_DB, 100);
     if (
       serviceSweep.processed || serviceSweep.failed
       || endpointSweep.processed || endpointSweep.failed
       || schemaSweep.processed || schemaSweep.failed
+      || evidenceSweep.processed || evidenceSweep.failed
       || classificationSignalSweep.processed || classificationSignalSweep.failed
       || classificationSweep.processed || classificationSweep.failed
     ) {
       console.log(
-        `[QAgent Catalog] pending sweep services=${serviceSweep.processed}/${serviceSweep.failed} endpoints=${endpointSweep.processed}/${endpointSweep.failed} schemas=${schemaSweep.processed}/${schemaSweep.failed} classificationSignals=${classificationSignalSweep.processed}/${classificationSignalSweep.failed} classifications=${classificationSweep.processed}/${classificationSweep.failed}`,
+        `[QAgent Catalog] pending sweep services=${serviceSweep.processed}/${serviceSweep.failed} endpoints=${endpointSweep.processed}/${endpointSweep.failed} schemas=${schemaSweep.processed}/${schemaSweep.failed} evidence=${evidenceSweep.processed}/${evidenceSweep.failed} classificationSignals=${classificationSignalSweep.processed}/${classificationSignalSweep.failed} classifications=${classificationSweep.processed}/${classificationSweep.failed}`,
       );
     }
   },
@@ -132,10 +150,11 @@ export default {
       const serviceSweep = await processPendingServiceIdentityBatch(env.CATALOG_DB, 100);
       const endpointSweep = await processPendingEndpointIdentityBatch(env.CATALOG_DB, 100);
       const schemaSweep = await processPendingSchemaConsolidationBatch(env.CATALOG_DB, 150);
+      const evidenceSweep = await processPendingEvidenceBatch(env.CATALOG_DB, 250);
       const classificationSignalSweep = await processPendingClassificationSignalBatch(env.CATALOG_DB, 250);
       const classificationSweep = await processPendingServiceClassificationBatch(env.CATALOG_DB, 100);
       console.log(
-        `[QAgent Catalog] scheduled knowledge sweep services=${serviceSweep.processed}/${serviceSweep.failed} endpoints=${endpointSweep.processed}/${endpointSweep.failed} schemas=${schemaSweep.processed}/${schemaSweep.failed} classificationSignals=${classificationSignalSweep.processed}/${classificationSignalSweep.failed} classifications=${classificationSweep.processed}/${classificationSweep.failed}`,
+        `[QAgent Catalog] scheduled knowledge sweep services=${serviceSweep.processed}/${serviceSweep.failed} endpoints=${endpointSweep.processed}/${endpointSweep.failed} schemas=${schemaSweep.processed}/${schemaSweep.failed} evidence=${evidenceSweep.processed}/${evidenceSweep.failed} classificationSignals=${classificationSignalSweep.processed}/${classificationSignalSweep.failed} classifications=${classificationSweep.processed}/${classificationSweep.failed}`,
       );
     })());
   },
