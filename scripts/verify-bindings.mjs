@@ -5,7 +5,9 @@ const wrangler = readFileSync(new URL("../wrangler.toml", import.meta.url), "utf
 const required = [
   ['Catalog D1 binding', /binding\s*=\s*["']CATALOG_DB["']/],
   ['Catalog update Queue consumer', /\[\[queues\.consumers\]\][\s\S]*?queue\s*=\s*["']qagent-catalog-updates-dev["']/],
-  ['Service identity recovery cron', /\[triggers\][\s\S]*?crons\s*=\s*\[[^\]]*["']\*\/5 \* \* \* \*["']/],
+  ['Knowledge recovery cron', /\[triggers\][\s\S]*?crons\s*=\s*\[[^\]]*["']\*\/5 \* \* \* \*["']/],
+  ['Foundation metadata 07.5.4', /FOUNDATION\s*=\s*["']07\.5\.4["']/],
+  ['Revision metadata logical-endpoint-identity-v1', /REVISION\s*=\s*["']logical-endpoint-identity-v1["']/],
 ];
 
 const missing = required.filter(([, pattern]) => !pattern.test(wrangler)).map(([name]) => name);
@@ -14,4 +16,4 @@ if (missing.length) {
   process.exit(1);
 }
 
-console.log('[QAgent Catalog] D1, Queue consumer and recovery cron bindings verified.');
+console.log('[QAgent Catalog] D1, Queue consumer, recovery cron and release metadata verified.');

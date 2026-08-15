@@ -4,20 +4,31 @@ QAgent **Knowledge Layer**.
 
 Foundation 07.5 converts safe, deterministic facts produced by the Processing Plane into durable API knowledge.
 
-## Current scope — 07.5.1
+## Current scope — 07.5.4
 
-This package contains only the deployable Catalog foundation:
+The Catalog currently provides:
 
-- Cloudflare Worker;
-- TypeScript strict;
-- Wrangler;
-- Vitest;
-- independent D1 binding (`CATALOG_DB`);
-- minimal metadata migration;
-- health endpoint;
-- public route normalization for `/v1/catalog/*`.
+- Cloudflare Worker + D1;
+- durable `qagent.catalog-update.v1` ingestion inbox;
+- conservative Service Identity (`service-identity-v1`);
+- environment-aware Service Host Mapping;
+- stable logical Endpoint Identity (`logical-endpoint-v1`);
+- physical endpoint bindings separated from logical endpoint identity;
+- Queue consumer;
+- five-minute recovery sweep;
+- health endpoint.
 
-It intentionally does **not** implement endpoint identity, service grouping, schemas, classification, confidence, evidence, AI or Runner logic yet.
+The logical endpoint identity is:
+
+```text
+organizationId
++ projectId
++ serviceId
++ HTTP method
++ normalizedPath
+```
+
+It deliberately excludes Environment, scheme, host, Observation Session, batch and the Normalizer endpoint id.
 
 ## Local bootstrap
 
@@ -26,25 +37,13 @@ npm ci
 npm run check
 ```
 
-## D1 creation
-
-```bash
-npx wrangler d1 create qagent-catalog-dev
-```
-
-Copy the returned database ID into `wrangler.toml`.
-
-Then apply migrations:
+## D1
 
 ```bash
 npx wrangler d1 migrations apply qagent-catalog-dev --remote
 ```
 
-## Development
-
-```bash
-npm run dev
-```
+Preserve only the real `database_id` when replacing snapshots; do not preserve an old `wrangler.toml` wholesale.
 
 ## Health
 
@@ -54,37 +53,43 @@ Workers.dev:
 GET /health
 ```
 
-Public route target:
+Public route:
 
 ```http
 GET /v1/catalog/health
 ```
 
-Expected payload:
+Expected payload for this snapshot:
 
 ```json
 {
   "status": "ok",
   "service": "qagent-catalog",
-  "foundation": "07.5.1",
-  "revision": "foundation",
+  "foundation": "07.5.4",
+  "revision": "logical-endpoint-identity-v1",
   "role": "knowledge-layer",
   "environment": "development"
 }
 ```
 
-## Deployment
-
-After configuring the real D1 database ID:
-
-```bash
-npm run deploy
-```
-
-Recommended public Cloudflare route:
+## Public route
 
 ```text
 api.apiqagent.com/v1/catalog/*
+```
+
+## Current knowledge pipeline
+
+```text
+Catalog Inbox
+  ↓
+Service Identity
+  ↓
+Service Host Mapping
+  ↓
+Stable Logical Endpoint Identity
+  ↓
+Endpoint Physical Binding
 ```
 
 ## Architectural invariant
@@ -95,11 +100,4 @@ Normalizer knows what the fact means structurally.
 Catalog knows what we believe exists in the system.
 ```
 
-
-## 07.5.2
-
-The Catalog now consumes versioned `qagent.catalog-update.v1` events from the Normalizer into a durable idempotent inbox. Domain consolidation starts in 07.5.3.
-
-## Foundation 07.5.3
-
-Service Identity & Host Mapping processes Catalog inbox facts into `catalog_services` and environment-aware `catalog_service_hosts`. Identity v1 is conservative (`host:<hostname>`); different hostnames are not automatically merged without evidence. A Queue post-batch sweep plus a five-minute Cron Trigger recovers older PENDING events.
+Classification, schema versioning, evidence, frequency/confidence, lifecycle, Query API, AI Test Design and Runner remain outside 07.5.4.

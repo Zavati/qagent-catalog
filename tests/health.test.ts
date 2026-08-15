@@ -7,18 +7,18 @@ function env(): Env {
     CATALOG_DB: {} as D1Database,
     ENVIRONMENT: "development",
     SERVICE_NAME: "qagent-catalog",
-    FOUNDATION: "07.5.3",
-    REVISION: "service-identity-v1",
+    FOUNDATION: "07.5.4",
+    REVISION: "logical-endpoint-identity-v1",
   } as Env;
 }
 
-describe("Foundation 07.5.1 health", () => {
+describe("Foundation 07.5.4 health", () => {
   it("exposes the Knowledge Layer identity", () => {
     expect(catalogHealth(env())).toEqual({
       status: "ok",
       service: "qagent-catalog",
-      foundation: "07.5.3",
-      revision: "service-identity-v1",
+      foundation: "07.5.4",
+      revision: "logical-endpoint-identity-v1",
       role: "knowledge-layer",
       environment: "development",
     });
@@ -34,7 +34,7 @@ describe("Foundation 07.5.1 health", () => {
     expect(await response.json()).toMatchObject({
       status: "ok",
       service: "qagent-catalog",
-      foundation: "07.5.3",
+      foundation: "07.5.4",
       role: "knowledge-layer",
     });
   });
