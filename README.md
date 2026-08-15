@@ -102,3 +102,8 @@ Catalog knows what we believe exists in the system.
 ```
 
 Schema versioning, Evidence Model, operational frequency signals, Discovery Confidence, lifecycle, Query API, QA Curation, AI Test Design and Runner remain outside 07.5.5.
+
+
+## Foundation 07.5.6 — Schema Consolidation & Versioning
+
+The Knowledge Layer now consolidates Normalizer structural schema signals into contract tracks and immutable versions. Request schemas and response schemas by HTTP status are independent tracks. The Catalog records the current version per environment, allowing later DEV/STG/PROD drift detection. Event-level schema JSON is pruned after consolidation; hashes and version references remain for traceability.
