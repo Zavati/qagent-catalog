@@ -7,7 +7,7 @@ workers_dev = true
 ENVIRONMENT = "development"
 SERVICE_NAME = "qagent-catalog"
 FOUNDATION = "07.5.11"
-REVISION = "catalog-query-v1"
+REVISION = "catalog-query-v1-fix-1"
 CATALOG_QUERY_MAX_SKEW_SECONDS = "300"
 
 [secrets]
