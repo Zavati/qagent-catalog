@@ -33,7 +33,7 @@ dead_letter_queue = "qagent-catalog-updates-dlq-dev"
 crons = [ "*/5 * * * *" ]
 
 [observability]
-enabled = false
+enabled = true
 head_sampling_rate = 1
 
 [observability.logs]
