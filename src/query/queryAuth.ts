@@ -23,13 +23,17 @@ function bytesToHex(bytes: ArrayBuffer): string {
   return Array.from(new Uint8Array(bytes), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-function hexToBytes(hex: string): Uint8Array | null {
+function hexToArrayBuffer(hex: string): ArrayBuffer | null {
   if (!/^[0-9a-f]{64}$/i.test(hex)) return null;
-  const bytes = new Uint8Array(hex.length / 2);
+
+  const buffer = new ArrayBuffer(hex.length / 2);
+  const bytes = new Uint8Array(buffer);
+
   for (let i = 0; i < hex.length; i += 2) {
     bytes[i / 2] = Number.parseInt(hex.slice(i, i + 2), 16);
   }
-  return bytes;
+
+  return buffer;
 }
 
 export function canonicalizeQuery(searchParams: URLSearchParams): string {
@@ -57,7 +61,7 @@ export function buildCatalogQuerySigningPayload(
 }
 
 async function verifyHmac(secret: string, payload: string, signatureHex: string): Promise<boolean> {
-  const signature = hexToBytes(signatureHex);
+  const signature = hexToArrayBuffer(signatureHex);
   if (!signature) return false;
 
   const key = await crypto.subtle.importKey(

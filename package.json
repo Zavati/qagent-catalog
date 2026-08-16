@@ -1,6 +1,6 @@
 {
   "name": "qagent-catalog",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "QAgent Knowledge Layer - tenant-aware read-only Catalog Query API.",
   "type": "module",
   "scripts": {

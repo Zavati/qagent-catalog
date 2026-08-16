@@ -9,7 +9,7 @@ const required = [
   ['Query auth skew configuration', /CATALOG_QUERY_MAX_SKEW_SECONDS\s*=\s*["']300["']/],
   ['Query HMAC required secret declaration', /\[secrets\][\s\S]*?required\s*=\s*\[[^\]]*["']CATALOG_QUERY_HMAC_SECRET["']/],
   ['Foundation metadata 07.5.11', /FOUNDATION\s*=\s*["']07\.5\.11["']/],
-  ['Revision metadata catalog-query-v1', /REVISION\s*=\s*["']catalog-query-v1["']/],
+  ['Revision metadata catalog-query-v1-fix-1', /REVISION\s*=\s*["']catalog-query-v1-fix-1["']/],
 ];
 
 const missing = required.filter(([, pattern]) => !pattern.test(wrangler)).map(([name]) => name);
