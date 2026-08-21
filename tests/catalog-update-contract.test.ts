@@ -53,4 +53,36 @@ describe("Foundation 07.5.2 catalog update contract", () => {
     (event.schemas as Record<string, unknown>).response = { hash: "bad", schema: { type: "object" } };
     expect(isCatalogUpdateMessage(event)).toBe(false);
   });
+  it("accepts the optional sanitized observed-auth signal", () => {
+    const event = validEvent();
+    (event.observation as Record<string, unknown>).authObserved = true;
+    (event.observation as Record<string, unknown>).authScheme = "BEARER";
+    expect(isCatalogUpdateMessage(event)).toBe(true);
+  });
+
+  it("accepts explicit no-auth evidence without inventing a scheme", () => {
+    const event = validEvent();
+    (event.observation as Record<string, unknown>).authObserved = false;
+    (event.observation as Record<string, unknown>).authScheme = null;
+    expect(isCatalogUpdateMessage(event)).toBe(true);
+  });
+
+  it("rejects inconsistent or unsupported observed-auth metadata", () => {
+    const falseWithScheme = validEvent();
+    (falseWithScheme.observation as Record<string, unknown>).authObserved = false;
+    (falseWithScheme.observation as Record<string, unknown>).authScheme = "BEARER";
+    expect(isCatalogUpdateMessage(falseWithScheme)).toBe(false);
+
+    const unsupported = validEvent();
+    (unsupported.observation as Record<string, unknown>).authObserved = true;
+    (unsupported.observation as Record<string, unknown>).authScheme = "DIGEST";
+    expect(isCatalogUpdateMessage(unsupported)).toBe(false);
+  });
+
+  it("continues rejecting raw Authorization values", () => {
+    const event = validEvent();
+    (event.observation as Record<string, unknown>).authorization = "Bearer must-not-enter-catalog";
+    expect(isCatalogUpdateMessage(event)).toBe(false);
+  });
+
 });

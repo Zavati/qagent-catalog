@@ -1,6 +1,7 @@
 export const CATALOG_UPDATE_SCHEMA_VERSION = "qagent.catalog-update.v1" as const;
 
 export type OriginRelation = "SAME_ORIGIN" | "SAME_SITE_HEURISTIC" | "EXTERNAL" | "UNKNOWN";
+export type ObservedAuthScheme = "BEARER" | "BASIC" | "API_KEY" | "COOKIE" | "UNKNOWN";
 
 export type InferredSchema = {
   type: string | string[];
@@ -43,6 +44,8 @@ export interface CatalogUpdateMessageV1 {
     originRelation: OriginRelation;
     latencyMs: number;
     resourceType: string;
+    authObserved?: boolean;
+    authScheme?: ObservedAuthScheme | null;
     requestContentType: string | null;
     responseContentType: string | null;
   };
@@ -56,6 +59,13 @@ const ORIGIN_RELATIONS = new Set<OriginRelation>([
   "SAME_ORIGIN",
   "SAME_SITE_HEURISTIC",
   "EXTERNAL",
+  "UNKNOWN",
+]);
+const OBSERVED_AUTH_SCHEMES = new Set<ObservedAuthScheme>([
+  "BEARER",
+  "BASIC",
+  "API_KEY",
+  "COOKIE",
   "UNKNOWN",
 ]);
 
@@ -108,12 +118,22 @@ export function isCatalogUpdateMessage(value: unknown): value is CatalogUpdateMe
   if (!isRecord(value.context) || !hasOnlyKeys(value.context, ["organizationId", "projectId", "environmentId"]) || !isNonEmptyString(value.context.organizationId, 128) || !isNonEmptyString(value.context.projectId, 128) || !isNonEmptyString(value.context.environmentId, 128)) return false;
   if (!isRecord(value.source) || !hasOnlyKeys(value.source, ["normalizedEventId", "normalizedEndpointId", "observationSessionId", "batchId"]) || !isNonEmptyString(value.source.normalizedEventId, 160) || !isNonEmptyString(value.source.normalizedEndpointId, 160) || !isNonEmptyString(value.source.observationSessionId, 160) || !isNonEmptyString(value.source.batchId, 160)) return false;
   if (!isRecord(value.endpoint) || !hasOnlyKeys(value.endpoint, ["method", "scheme", "host", "normalizedPath"]) || !isNonEmptyString(value.endpoint.method, 32) || !isNonEmptyString(value.endpoint.scheme, 16) || !isNonEmptyString(value.endpoint.host, 512) || !isNonEmptyString(value.endpoint.normalizedPath, 4096)) return false;
-  if (!isRecord(value.observation) || !hasOnlyKeys(value.observation, ["observedAt", "statusCode", "networkFailure", "originRelation", "latencyMs", "resourceType", "requestContentType", "responseContentType"]) || !isNonEmptyString(value.observation.observedAt, 64)) return false;
+  if (!isRecord(value.observation) || !hasOnlyKeys(value.observation, ["observedAt", "statusCode", "networkFailure", "originRelation", "latencyMs", "resourceType", "authObserved", "authScheme", "requestContentType", "responseContentType"]) || !isNonEmptyString(value.observation.observedAt, 64)) return false;
   if (value.observation.statusCode !== null && !(Number.isInteger(value.observation.statusCode) && Number(value.observation.statusCode) >= 100 && Number(value.observation.statusCode) <= 599)) return false;
   if (typeof value.observation.networkFailure !== "boolean") return false;
   if (!ORIGIN_RELATIONS.has(value.observation.originRelation as OriginRelation)) return false;
   if (!(typeof value.observation.latencyMs === "number" && Number.isFinite(value.observation.latencyMs) && value.observation.latencyMs >= 0)) return false;
   if (!isNonEmptyString(value.observation.resourceType, 64)) return false;
+  const authObserved = value.observation.authObserved;
+  const authScheme = value.observation.authScheme;
+  if (authObserved !== undefined || authScheme !== undefined) {
+    if (typeof authObserved !== "boolean") return false;
+    if (!authObserved) {
+      if (authScheme !== undefined && authScheme !== null) return false;
+    } else if (!OBSERVED_AUTH_SCHEMES.has(authScheme as ObservedAuthScheme)) {
+      return false;
+    }
+  }
   if (!isNullableString(value.observation.requestContentType, 128) || !isNullableString(value.observation.responseContentType, 128)) return false;
   if (!isRecord(value.schemas) || !hasOnlyKeys(value.schemas, ["request", "response"]) || !isSchemaSignal(value.schemas.request) || !isSchemaSignal(value.schemas.response)) return false;
   return true;

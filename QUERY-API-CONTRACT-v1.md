@@ -108,3 +108,18 @@ GET /v1/catalog/endpoints/:endpointId/lifecycle-history
 ```
 
 Read-only audit history of lifecycle transitions. Mutation is intentionally absent until 07.5.13.
+
+## Additive Evidence metadata — Foundation 07.7.2-A FIX-2
+
+`catalog-query-v1` may expose the following optional safe Evidence fields without changing the query API version:
+
+```json
+{
+  "authObserved": true,
+  "authScheme": "BEARER"
+}
+```
+
+`authObserved` is a JSON boolean. `authScheme` is one of `BEARER`, `BASIC`, `API_KEY`, `COOKIE`, `UNKNOWN`, or null when `authObserved=false`.
+
+These fields contain no credential value and do not authorize execution by themselves; they are provenance used by the Gateway to resolve an explicitly configured Auth Profile.

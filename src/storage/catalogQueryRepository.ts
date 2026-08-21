@@ -461,6 +461,8 @@ export async function listCatalogEvidence(
       ev.origin_relation,
       ev.latency_ms,
       ev.resource_type,
+      ev.auth_observed,
+      ev.auth_scheme,
       ev.request_content_type,
       ev.response_content_type,
       ev.request_schema_hash,

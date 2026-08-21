@@ -12,12 +12,13 @@ export async function insertCatalogIngestionEvent(
       normalized_event_id, normalized_endpoint_id, observation_session_id, batch_id,
       method, scheme, host, normalized_path,
       observed_at, status_code, network_failure, origin_relation, latency_ms, resource_type,
+      auth_observed, auth_scheme,
       request_content_type, response_content_type,
       request_schema_hash, request_schema_json,
       response_schema_hash, response_schema_json,
       emitted_at, received_at, processing_status, created_at, updated_at
     ) VALUES (
-      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', ?, ?
+      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', ?, ?
     )
   `).bind(
     event.eventId,
@@ -39,6 +40,8 @@ export async function insertCatalogIngestionEvent(
     event.observation.originRelation,
     Math.round(event.observation.latencyMs),
     event.observation.resourceType,
+    event.observation.authObserved === undefined ? null : (event.observation.authObserved ? 1 : 0),
+    event.observation.authScheme ?? null,
     event.observation.requestContentType,
     event.observation.responseContentType,
     event.schemas.request?.hash ?? null,

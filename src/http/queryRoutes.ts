@@ -54,6 +54,10 @@ function toApiValue(value: unknown): unknown {
 
   const output: Record<string, unknown> = {};
   for (const [key, raw] of Object.entries(value as Record<string, unknown>)) {
+    if (key === "auth_observed") {
+      output.authObserved = raw === null || raw === undefined ? null : Number(raw) === 1;
+      continue;
+    }
     if (key.endsWith("_json")) {
       output[camelize(key.slice(0, -5))] = parseJsonString(raw);
       continue;
